@@ -1,7 +1,7 @@
 var fs = require('fs');
-var testfile = process.argv[2];
-var option = process.argv[3];
+var argv = process.argv.slice(2);
 var child_process = require('child_process');
+var testfile;
 
 function printUsage() {
     var usage = [
@@ -15,11 +15,15 @@ function printUsage() {
 }
 
 
+var isOption = function(arg){return (arg[0] =='-');};
+
+var isFile = function(arg){return !isOption(arg);};
+
 function readFile(fileName) {
     try {
         return fs.readFileSync('./' + fileName, 'utf-8');
     } catch (e) {
-        throw e.message;
+        console.log(e.message);
     }
 };
 
@@ -31,23 +35,16 @@ function extractTests(fileContent) {
 };
 
 function printFormattedErr(err) {
-    err = err.split(/function|file|line/);
-    var errMessage = [
-        err[0],
-        "Test Name : " + err[1].trim(),
-        "File Name : " + err[2].substr(3),
-        "Line No.  : " + err[3].match(/\d+/g).join()
-    ]
-    console.log(errMessage.join('\n'));
+   process.stdout.write(err);
 }
 
-function printResult(test, allTests, summary) {
+function printResult(test, allTests, summary,dependency) {
     return function(err, stdout, stderr) {
         printTestName(test);
         if (stdout) console.log(stdout);
         if (err || stderr) summary.failed++, printFormattedErr(stderr);
         console.log('--------------');
-        runAllTests(allTests, summary);
+        runAllTests(allTests, summary,dependency);
     }
 }
 
@@ -64,26 +61,35 @@ function printTestName(test) {
 }
 
 function listTestNames(tests) {
-    tests.forEach(printTestName)
+    tests.forEach(printTestName);
 }
 
 function printTestCounts(summary) {
     console.log('failed/total :\t', summary.failed + '/' + summary.totalTest);
 };
 
-function runAllTests(tests, summary) {
+function runAllTests(tests, summary,dependency) {
     if (tests.length == 0) {
         printTestCounts(summary);
         return;
     }
     var test = tests.shift();
-    var mainFile = createFile(test);
+    var mainFile = createFile(test,testfile);
     fs.writeFileSync('test_main.c', mainFile);
-    child_process.execSync('gcc test_main.c array_util.c -o arrayUtilTest');
-    child_process.exec('./arrayUtilTest', printResult(test, tests, summary));
+    var command = 'gcc -o arrayUtilTest test_main.c ';
+    if(dependency) command += dependency;
+    try{
+        child_process.execSync(command);
+        child_process.exec('./arrayUtilTest', printResult(test, tests, summary,dependency));
+    }catch(e){ console.log(e.message)};
+    
 };
 
 function main() {
+    var option = argv.filter(isOption).join(' ');
+    var files = argv.filter(isFile);
+    testfile = files[0];
+    var dependency = files.slice(1).join(' ');
     if (testfile) {
         var fileContent = readFile(testfile);
         var tests = extractTests(fileContent);
@@ -94,7 +100,8 @@ function main() {
         console.log("loading tests from " + testfile + "\n--------------");
         if (option)
             listTestNames(tests);
-        runAllTests(tests, summary);
+        else
+        runAllTests(tests, summary,dependency);
     } else
         printUsage();
 };
