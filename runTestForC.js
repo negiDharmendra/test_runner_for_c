@@ -73,6 +73,8 @@ function listTestNames(tests) {
 
 function printTestCounts(summary) {
     console.log('Passed/Total :\t', (summary.passed) + '/' + (summary.passed+summary.failed));
+    if(fs.existsSync('all_test_c_'))
+      child_process.execSync('rm all_test_c_  test_runner_file_.c');
 };
 
 function runAllTests(tests, summary,dependency,stop) {
@@ -83,12 +85,12 @@ function runAllTests(tests, summary,dependency,stop) {
     }
     var test = tests.shift();
     var mainFile = createFile(test,testfile);
-    fs.writeFileSync('test_main.c', mainFile);
-    var command = 'gcc -o arrayUtilTest test_main.c ';
+    fs.writeFileSync('test_runner_file_.c', mainFile);
+    var command = 'gcc -o all_test_c_ test_runner_file_.c ';
     if(dependency) command += dependency;
     try{
         child_process.execSync(command);
-        child_process.exec('./arrayUtilTest', printResult(test, tests, summary,dependency,stop));
+        child_process.exec('./all_test_c_', printResult(test, tests, summary,dependency,stop));
     }catch(e){ console.log(e.message)};
     
 };
