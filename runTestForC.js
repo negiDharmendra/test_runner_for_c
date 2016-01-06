@@ -6,10 +6,10 @@ var testfile;
 function printUsage() {
     var usage = [
         'Usage :',
-        'node runTestForC.js exampleTest.c -w==> runs all tests',
-        'node runTestForC.js exampleTest.c -w -list ==> lists all tests',
-        'node runTestForC.js exampleTest.c -w -stop ==> stops on first failure',
-        'node runTestForC.js exampleTest.c -w -only namePart ==> runs all tests that match the namePart',
+        'node runTestForC.js test_file.c dependency_file.c -w==> runs all tests',
+        'node runTestForC.js test_file.c dependency_file.c -w -list ==> lists all tests',
+        'node runTestForC.js test_file.c dependency_file.c -w -stop ==> stops on first failure',
+        'node runTestForC.js test_file.c dependency_file.c -w -only namePart ==> runs all tests that match the namePart',
         '-w is optional to avoid compiler warning'
     ];
     console.log(usage.join('\t\n'));
@@ -66,6 +66,7 @@ function printTestName(test) {
 }
 
 function listTestNames(tests) {
+    console.log("loading tests from " + testfile + "\n--------------");
     tests.forEach(printTestName);
 }
 
