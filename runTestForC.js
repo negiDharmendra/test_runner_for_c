@@ -119,7 +119,7 @@ function optionManager(tests,option,dependency){
 
 
 function main() {
-    var files = isFile(argv);
+    var files = isFile(argv)||[];
     var gccCommand = argv.filter(isGccCommand).join('');
     var gccCommandIndex = argv.indexOf(gccCommand)>=0?1:0;
     var lastFileIndex = argv.indexOf(files[files.length-1]);
