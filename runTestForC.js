@@ -6,18 +6,22 @@ var testfile;
 function printUsage() {
     var usage = [
         'Usage :',
-        'node runTestForC.js exampleTest.c ==> runs all tests',
-        'node runTestForC.js exampleTest.c -list ==> lists all tests',
-        'node runTestForC.js exampleTest.c -stop ==> stops on first failure',
-        'node runTestForC.js exampleTest.c -only namePart ==> runs all tests that match the namePart'
+        'node runTestForC.js exampleTest.c -w==> runs all tests',
+        'node runTestForC.js exampleTest.c -w -list ==> lists all tests',
+        'node runTestForC.js exampleTest.c -w -stop ==> stops on first failure',
+        'node runTestForC.js exampleTest.c -w -only namePart ==> runs all tests that match the namePart',
+        '-w is optional to avoid compiler warning'
     ];
     console.log(usage.join('\t\n'));
 }
 
 
-var isOption = function(arg){return (arg[0] =='-');};
+function isOption (arg){return (arg[0] =='-'&&arg.length>2);};
+function isGccCommand (arg){return (arg[0] =='-'&&arg.length==2);};
 
-var isFile = function(arg){return !isOption(arg);};
+function isFile(argv){
+    return argv.join(' ').match(/\b\w+\.\w+/g);
+};
 
 function readFile(fileName) {
     try {
@@ -38,13 +42,14 @@ function printFormattedErr(err) {
    process.stdout.write(err);
 }
 
-function printResult(test, allTests, summary,dependency) {
+function printResult(test, allTests, summary,dependency,stop) {
     return function(err, stdout, stderr) {
         printTestName(test);
         if (stdout) console.log(stdout);
         if (err || stderr) summary.failed++, printFormattedErr(stderr);
+        else summary.passed++
         console.log('--------------');
-        runAllTests(allTests, summary,dependency);
+        runAllTests(allTests, summary,dependency,stop);
     }
 }
 
@@ -65,11 +70,12 @@ function listTestNames(tests) {
 }
 
 function printTestCounts(summary) {
-    console.log('failed/total :\t', summary.failed + '/' + summary.totalTest);
+    console.log('Passed/Total :\t', (summary.passed) + '/' + (summary.passed+summary.failed));
 };
 
-function runAllTests(tests, summary,dependency) {
-    if (tests.length == 0) {
+function runAllTests(tests, summary,dependency,stop) {
+
+    if ((tests.length==0)||(stop&&summary.failed)) {
         printTestCounts(summary);
         return;
     }
@@ -80,28 +86,51 @@ function runAllTests(tests, summary,dependency) {
     if(dependency) command += dependency;
     try{
         child_process.execSync(command);
-        child_process.exec('./arrayUtilTest', printResult(test, tests, summary,dependency));
+        child_process.exec('./arrayUtilTest', printResult(test, tests, summary,dependency,stop));
     }catch(e){ console.log(e.message)};
     
 };
 
+function matchedTest(option){
+    return function(test){
+        return test.match(option);
+    };
+};
+
+function optionManager(tests,option,dependency){
+    var summary = {failed: 0,passed:0 };
+    if(option == '-list')
+        listTestNames(tests);
+    if(option == '-help')
+        printUsage();
+    if(option == '-stop'){
+        runAllTests(tests,summary,dependency,true);
+    };
+    if(option.length>1&&option[0]=='-only'){
+        tests = tests.filter(matchedTest(option[1]));
+        runAllTests(tests,summary,dependency);
+    }
+}
+
+
 function main() {
-    var option = argv.filter(isOption).join(' ');
-    var files = argv.filter(isFile);
+    var files = isFile(argv);
+    var gccCommand = argv.filter(isGccCommand).join('');
+    var gccCommandIndex = argv.indexOf(gccCommand)>=0?1:0;
+    var lastFileIndex = argv.indexOf(files[files.length-1]);
+    var option  = argv.slice(lastFileIndex+gccCommandIndex+1);
     testfile = files[0];
-    var dependency = files.slice(1).join(' ');
+    var dependency = files.slice(1).join(' ') +' '+gccCommand;
     if (testfile) {
         var fileContent = readFile(testfile);
         var tests = extractTests(fileContent);
-        var summary = {
-            failed: 0,
-            totalTest: tests.length
-        }
-        console.log("loading tests from " + testfile + "\n--------------");
-        if (option)
-            listTestNames(tests);
-        else
-        runAllTests(tests, summary,dependency);
+        var summary = {failed: 0,passed:0 };
+        if (option.length>0)
+            optionManager(tests,option,dependency);
+        else{
+            console.log("loading tests from " + testfile + "\n--------------");
+            runAllTests(tests, summary,dependency);
+        };
     } else
         printUsage();
 };
