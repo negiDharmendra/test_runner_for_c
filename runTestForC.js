@@ -33,6 +33,7 @@ function readFile(fileName) {
 
 function extractTests(fileContent) {
     var tests = fileContent.match(/(\btest_\w+)/g);
+    if(tests == null) return [];
     return tests.map(function(test) {
         return test + "\(\);";
     });
