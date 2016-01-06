@@ -21,9 +21,9 @@ and don not put your test name with in any printf function.
 
 
 
-'Usage :',
-        'node runTestForC.js test_file.c dependency_file.c -w==> runs all tests',
-        'node runTestForC.js test_file.c dependency_file.c -w -list ==> lists all tests',
-        'node runTestForC.js test_file.c dependency_file.c -w -stop ==> stops on first failure',
-        'node runTestForC.js test_file.c dependency_file.c -w -only namePart ==> runs all tests that match the namePart',
-        '-w is optional to avoid compiler warning'
+Usage :
+        node runTestForC.js test_file.c dependency_file.c -w==> runs all tests
+        node runTestForC.js test_file.c dependency_file.c -w -list ==> lists all tests
+        node runTestForC.js test_file.c dependency_file.c -w -stop ==> stops on first failure
+        node runTestForC.js test_file.c dependency_file.c -w -only namePart ==> runs all tests that match the namePart
+        -w is optional to avoid compiler warning
