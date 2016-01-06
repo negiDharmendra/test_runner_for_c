@@ -38,15 +38,16 @@ function extractTests(fileContent) {
     });
 };
 
-function printFormattedErr(err) {
-   process.stdout.write(err);
+function printFormattedErr(stderr,err) {
+   process.stdout.write(stderr);
+   err&&console.log(err);
 }
 
 function printResult(test, allTests, summary,dependency,stop) {
     return function(err, stdout, stderr) {
         printTestName(test);
         if (stdout) console.log(stdout);
-        if (err || stderr) summary.failed++, printFormattedErr(stderr);
+        if (err || stderr) summary.failed++,printFormattedErr(stderr,err);
         else summary.passed++
         console.log('--------------');
         runAllTests(allTests, summary,dependency,stop);
