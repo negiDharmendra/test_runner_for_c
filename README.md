@@ -1,6 +1,13 @@
 # test_runner_for_c
 ##To use this test runner framework you have to setup your test file accoding the following sample.
 
+
+#### You have to run a command on your bash terminal ---  npm install
+
+```
+      now all error message will be in different color
+```
+
 ===============================================================
 sample_test.c
 ```
