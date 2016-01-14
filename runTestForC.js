@@ -1,6 +1,10 @@
 var fs = require('fs');
 var argv = process.argv.slice(2);
 var child_process = require('child_process');
+var chalk = require('chalk');
+
+var errorColor = chalk.bold.red;
+var output = chalk.bold.green;
 var testfile;
 
 function printUsage() {
@@ -40,8 +44,8 @@ function extractTests(fileContent) {
 };
 
 function printFormattedErr(stderr,err) {
-   process.stdout.write(stderr);
-   err&&console.log(err);
+   process.stdout.write(errorColor(stderr));
+   err&&console.log(errorColor(err));
 }
 
 function printResult(test, allTests, summary,dependency,stop) {
